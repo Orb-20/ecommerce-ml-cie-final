@@ -1,0 +1,10 @@
+model,2010-12-12 to 2011-02-13,2011-02-20 to 2011-04-24,2011-05-01 to 2011-07-03,mean_backtest_MAE
+Combination (seasonal naive + daily XGBoost),46726.9,20773.0,32829.3,33443.1
+Linear Regression (weekly),53463.1,20997.6,36495.1,36985.3
+Naive (last week),58334.0,24609.5,45045.3,42662.9
+Random Forest (daily→weekly),75213.3,16375.9,40419.3,44002.8
+Random Forest (weekly),77610.6,21232.6,33911.9,44251.7
+Seasonal naive (last year),27483.6,21778.9,35541.7,28268.1
+Training mean,72147.8,34153.9,39278.4,48526.7
+XGBoost (daily→weekly),75971.4,19767.0,39043.7,44927.4
+XGBoost (weekly),73760.2,25635.3,34236.7,44544.1

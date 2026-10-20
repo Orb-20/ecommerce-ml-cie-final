@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RetailMind</title>
+  <meta name="description" content="Revenue forecasting, transaction anomaly detection and customer segmentation: models, metrics, comparisons and live predictions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Home">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#ece0c8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 6-8 3 3"/></svg></span>
+      <span>RetailMind <span class="full" style="color:var(--muted);font-weight:400">/ e-commerce ML</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#data">Data</a></li>
+      <li><a href="#forecast">Forecasting</a></li>
+      <li><a href="#anomaly">Anomaly</a></li>
+      <li><a href="#segments">Segmentation</a></li>
+      <li><a href="#compare">Comparison</a></li>
+      <li><a href="#gallery">Notebook figures</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+      <div class="hero-text">
+      <div class="eyebrow fade-in" style="animation-delay:.05s">RetailMind &middot; e-commerce machine learning</div>
+      <h1>
+        <span class="split-line"><span>Three models.</span></span>
+        <span class="split-line"><span>One online shop.</span></span>
+        <span class="split-line"><span><em>Honest numbers.</em></span></span>
+      </h1>
+      <p class="lede fade-in">Weekly revenue forecasting, transaction anomaly detection and customer segmentation, each trained on the most suitable public dataset and evaluated on held-out data. Every chart, metric and prediction on this page comes straight from the project notebooks and the saved models.</p>
+      </div>
+      <figure class="hero-art fade-in" style="animation-delay:.35s">
+        <img src="figures/img1.png" alt="Illustration of the three RetailMind modules: revenue forecasting, transaction anomaly detection and customer segmentation around an online shop" width="1672" height="941">
+      </figure>
+      </div>
+
+      <div class="hero-chart fade-in" style="animation-delay:.7s">
+        <div class="hero-chart-head">
+          <strong>Weekly net revenue, Online Retail II</strong>
+          <span id="hero-range" class="mono"></span>
+        </div>
+        <svg id="hero-svg" viewBox="0 0 1000 180" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+
+      <div class="stats stagger" data-reveal>
+        <div class="stat"><div class="num" data-count="1067371">0</div><div class="lbl">raw invoice lines analysed</div></div>
+        <div class="stat"><div class="num" data-count="151112">0</div><div class="lbl">first purchases with fraud labels</div></div>
+        <div class="stat"><div class="num" data-count="5832">0</div><div class="lbl">customers segmented</div></div>
+        <div class="stat"><div class="num" data-count="27">0</div><div class="lbl">models and baselines compared</div></div>
+      </div>
+    </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Seasonal naive + daily XGBoost</span><span>Isolation Forest at a 5 % review rate</span><span>RFM + K-Means, K = 4</span><span>Leakage-checked features</span><span>Time-based test splits</span><span>Unseen customer cohort</span><span>18 + 6 month future-value split</span>
+        <span>Seasonal naive + daily XGBoost</span><span>Isolation Forest at a 5 % review rate</span><span>RFM + K-Means, K = 4</span><span>Leakage-checked features</span><span>Time-based test splits</span><span>Unseen customer cohort</span><span>18 + 6 month future-value split</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DATA ================= -->
+  <section class="block" id="data">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="section-num">00</div>
+        <span class="tag">Datasets &amp; preparation</span>
+        <div><h2>Two real datasets, cleaned rule by rule</h2>
+        <p>Online Retail II powers forecasting and segmentation; the E-commerce Fraud Data is one of very few public sets with a confirmed fraud label, so anomaly detection can actually be measured.</p></div>
+      </div>
+      <div class="grid g2 stagger" data-reveal id="dataset-cards"></div>
+      <div class="why why-row reveal"><p><b>What it shows</b>The two real datasets used and how big they are.</p><p><b>Why it helps</b>You can see the models are built on real shop data, not made-up numbers.</p></div>
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card reveal">
+          <h3>Online Retail II cleaning log</h3>
+          <div class="sub">Rows remaining after each documented rule. Cancellations are kept because forecasting uses net revenue.</div>
+          <div class="why"><p><b>What it shows</b>How many rows were left after each cleaning rule removed bad data.</p><p><b>Why it helps</b>You can see the data was cleaned carefully and only about 4 % was thrown away.</p></div>
+          <div id="funnel"></div>
+        </div>
+        <div class="card reveal">
+          <h3>Revenue by weekday</h3>
+          <div class="sub">Total net revenue per weekday across the two years. The shop barely trades on Saturdays.</div>
+          <div class="why"><p><b>What it shows</b>Total sales for each day of the week.</p><p><b>Why it helps</b>It explains why the model needs to know the weekday: Saturdays are always zero.</p></div>
+          <div class="chart-box short"><canvas data-chart="weekday"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODULE A ================= -->
+  <section class="block" id="forecast">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="section-num">A</div>
+        <span class="tag">Module A &middot; Revenue forecasting</span>
+        <div><h2>Forecasting next week's revenue</h2>
+        <p>The test set is the last 21 complete weeks, including the autumn peak. Every feature is known by the end of the previous week, and tree models trained on daily rows get seven times more training data.</p></div>
+      </div>
+
+      <div class="grid g4 stagger" data-reveal id="fc-kpis"></div>
+      <div class="why why-row reveal"><p><b>What it shows</b>The headline accuracy of the chosen forecasting model on 21 weeks it never saw.</p><p><b>Why it helps</b>Four numbers that tell you how much to trust next week's revenue forecast.</p></div>
+
+      <div class="card reveal" style="margin-top:20px">
+        <h3>Actual vs predicted weekly revenue</h3>
+        <div class="sub">Full history with the 21-week test window. Toggle models to overlay their test-set forecasts.</div>
+          <div class="why"><p><b>What it shows</b>The real weekly revenue line, with each model's forecast drawn over the last 21 weeks.</p><p><b>Why it helps</b>You can see with your own eyes how closely each model follows the real sales.</p></div>
+        <div class="chips" id="fc-chips"></div>
+        <div class="chart-box tall"><canvas data-chart="fcMain"></canvas></div>
+      </div>
+
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card reveal">
+          <h3>Test MAE by model</h3>
+          <div class="sub">Lower is better. All nine models and baselines on the held-out 21 weeks.</div>
+          <div class="why"><p><b>What it shows</b>The average weekly forecast mistake of every model, in pounds.</p><p><b>Why it helps</b>The shortest bar is the most accurate model, so you can pick a winner at a glance.</p></div>
+          <div class="chart-box"><canvas data-chart="fcMae"></canvas></div>
+        </div>
+        <div class="card reveal">
+          <h3>Robustness: 3-window backtest</h3>
+          <div class="sub">MAE in three earlier windows inside the training period, for the strongest approaches.</div>
+          <div class="why"><p><b>What it shows</b>The same models tested again on three earlier time periods.</p><p><b>Why it helps</b>It checks the winner was not just lucky on one test period.</p></div>
+          <div class="chart-box"><canvas data-chart="fcBacktest"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card reveal" style="margin-top:20px">
+        <h3>Full metrics table</h3>
+        <div class="sub">Click a column header to sort. The selected model is highlighted.</div>
+          <div class="why"><p><b>What it shows</b>All accuracy scores for every forecasting model in one place.</p><p><b>Why it helps</b>Sort by any column to compare models on the measure you care about.</p></div>
+        <div class="table-wrap"><table id="fc-table"></table></div>
+      </div>
+
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card reveal">
+          <h3>Daily XGBoost feature importance</h3>
+          <div class="sub">What the daily model relies on most when predicting a day's revenue.</div>
+          <div class="why"><p><b>What it shows</b>Which inputs the XGBoost model relies on most.</p><p><b>Why it helps</b>It shows the model learned sensible things like holidays and weekdays, not random noise.</p></div>
+          <div class="chart-box"><canvas data-chart="fcImportance"></canvas></div>
+        </div>
+        <div class="card reveal">
+          <h3>Weekly error of the selected model</h3>
+          <div class="sub">Actual minus predicted for each test week. Bars above zero mean the forecast was too low.</div>
+          <div class="why"><p><b>What it shows</b>How far off the chosen model was in each test week.</p><p><b>Why it helps</b>You can spot when the model guessed too low or too high, and by how much.</p></div>
+          <div class="chart-box"><canvas data-chart="fcResidual"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card play reveal" style="margin-top:20px">
+        <div class="play-form">
+          <span class="tag">Prediction playground</span>
+          <h3>Tune the combination model</h3>
+          <div class="sub">The selected model blends two forecasts: <span class="mono" id="fc-rule"></span>. Move the weight and see how test accuracy responds, live.</div>
+          <div class="why"><p><b>What it shows</b>A live control that changes how the final model mixes its two forecasts.</p><p><b>Why it helps</b>Move the slider to see why a 50 / 50 mix gives the best accuracy.</p></div>
+          <div class="field">
+            <div class="field-top"><label for="fc-weight">Weight on seasonal naive</label><output id="fc-weight-out">50 %</output></div>
+            <input type="range" id="fc-weight" min="0" max="100" value="50" step="5">
+            <div class="hint">0 % = daily XGBoost only, 100 % = same week last year only.</div>
+          </div>
+          <div class="field">
+            <div class="field-top"><label for="fc-week">Inspect a test week</label><output id="fc-week-out"></output></div>
+            <input type="range" id="fc-week" min="0" max="20" value="18" step="1">
+          </div>
+          <div class="mini-stats" id="fc-week-stats"></div>
+        </div>
+        <div class="play-out">
+          <div>
+            <div class="verdict-sub">Test MAE with this weight</div>
+            <div class="verdict" id="fc-play-mae">-</div>
+            <div class="verdict-sub" id="fc-play-delta"></div>
+          </div>
+          <div class="mini-stats" id="fc-play-stats"></div>
+          <div class="chart-box short"><canvas id="fc-play-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODULE B ================= -->
+  <section class="block" id="anomaly">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="section-num">B</div>
+        <span class="tag">Module B &middot; Anomaly &amp; risk detection</span>
+        <div><h2>Flagging unusual transactions</h2>
+        <p>Detectors are trained on January to June signups and evaluated on July to August signups the model has never seen. The fraud label is used only for evaluation; a supervised XGBoost is kept as a reference.</p></div>
+      </div>
+
+      <div class="grid g4 stagger" data-reveal id="an-kpis"></div>
+      <div class="why why-row reveal"><p><b>What it shows</b>The headline results of the fraud detector on customers it never saw.</p><p><b>Why it helps</b>They show the detector finds fraud almost 5 times better than random checking.</p></div>
+
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card reveal">
+          <h3>ROC curves</h3>
+          <div class="sub">Ranking quality across all thresholds. The diagonal is random guessing.</div>
+          <div class="why"><p><b>What it shows</b>How well each method separates fraud from normal purchases at every possible threshold.</p><p><b>Why it helps</b>A curve further above the dashed diagonal means a better fraud detector.</p></div>
+          <div class="chart-box"><canvas data-chart="anRoc"></canvas></div>
+        </div>
+        <div class="card reveal">
+          <h3>Precision-recall curves</h3>
+          <div class="sub">Random precision equals the test fraud rate (<span id="an-base"></span>).</div>
+          <div class="why"><p><b>What it shows</b>How many flags are real fraud (precision) versus how much fraud is caught (recall).</p><p><b>Why it helps</b>It is the fairest view when fraud is rare, as it is here.</p></div>
+          <div class="chart-box"><canvas data-chart="anPr"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card reveal" style="margin-top:20px">
+        <h3>Method comparison</h3>
+        <div class="sub">Pick a metric. Unsupervised methods never see the fraud label during training.</div>
+          <div class="why"><p><b>What it shows</b>The four detection methods side by side on one chosen score.</p><p><b>Why it helps</b>Switch the score to see which method wins on each measure.</p></div>
+        <div class="chips" id="an-chips"></div>
+        <div class="chart-box short"><canvas data-chart="anCompare"></canvas></div>
+        <div class="table-wrap" style="margin-top:18px"><table id="an-table"></table></div>
+      </div>
+
+      <div class="grid g3" style="margin-top:20px">
+        <div class="card reveal span2">
+          <h3>Isolation Forest score distribution</h3>
+          <div class="sub">Fraud scores sit further right. The dotted line marks the 5 % review threshold.</div>
+          <div class="why"><p><b>What it shows</b>How unusual the model thinks normal and fraud purchases are.</p><p><b>Why it helps</b>Fraud sits further right, so the dotted line catches more fraud than random checks would.</p></div>
+          <div class="chart-box"><canvas data-chart="anHist"></canvas></div>
+        </div>
+        <div class="card reveal" data-reveal>
+          <h3>Confusion at 5 % review</h3>
+          <div class="sub">Unseen July to August cohort.</div>
+          <div class="why"><p><b>What it shows</b>How many purchases were caught, missed, wrongly flagged or correctly passed.</p><p><b>Why it helps</b>It turns the scores into real counts a review team would actually see.</p></div>
+          <div class="confusion" id="an-confusion"></div>
+          <p class="note-box" style="margin-top:16px">Flags mean "review", not "block": most flagged purchases are still legitimate.</p>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card reveal">
+          <h3>Review budget trade-off</h3>
+          <div class="sub">Reviewing more purchases catches more fraud but lowers precision.</div>
+          <div class="why"><p><b>What it shows</b>What happens to accuracy when more purchases are sent for review.</p><p><b>Why it helps</b>It helps a business decide how many purchases its team should check.</p></div>
+          <div class="chart-box"><canvas data-chart="anFlag"></canvas></div>
+        </div>
+        <div class="card reveal">
+          <h3>Most unusual test purchases</h3>
+          <div class="sub">Top of the Isolation Forest review queue.</div>
+          <div class="why"><p><b>What it shows</b>The purchases the model ranked as the strangest.</p><p><b>Why it helps</b>You can see what a real review queue looks like and why some flags are innocent.</p></div>
+          <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table id="an-top"></table></div>
+        </div>
+      </div>
+
+      <div class="card play reveal" style="margin-top:20px">
+        <div class="play-form">
+          <span class="tag">Prediction playground</span>
+          <h3>Score a transaction</h3>
+          <div class="sub">The saved Isolation Forest (300 trees) runs right here in your browser, using the exact parameters from the notebook.</div>
+          <div class="why"><p><b>What it shows</b>A live fraud check using the real trained Isolation Forest.</p><p><b>Why it helps</b>Change the details of a purchase and instantly see if it would be sent for review.</p></div>
+          <div class="chips" id="an-presets"></div>
+          <div id="an-fields"></div>
+        </div>
+        <div class="play-out">
+          <svg class="gauge" viewBox="0 0 320 190" aria-hidden="true">
+            <defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#c4a57a"/><stop offset=".6" stop-color="#a8703f"/><stop offset="1" stop-color="#a2452e"/></linearGradient></defs>
+            <path d="M30 160 A130 130 0 0 1 290 160" fill="none" stroke="#dccaa8" stroke-width="22" stroke-linecap="round"/>
+            <path id="gauge-arc" d="M30 160 A130 130 0 0 1 290 160" fill="none" stroke="url(#gg)" stroke-width="22" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" style="transition:stroke-dasharray .8s cubic-bezier(.2,.7,.2,1)"/>
+            <line id="gauge-thr" x1="160" y1="160" x2="160" y2="18" stroke="#3a281c" stroke-width="2" stroke-dasharray="4 4"/>
+            <g class="needle" id="gauge-needle"><line x1="160" y1="160" x2="160" y2="52" stroke="#3a281c" stroke-width="4" stroke-linecap="round"/><circle cx="160" cy="160" r="10" fill="#3a281c"/></g>
+          </svg>
+          <div style="text-align:center">
+            <div class="verdict" id="an-verdict">-</div>
+            <div class="verdict-sub" id="an-verdict-sub"></div>
+          </div>
+          <div class="mini-stats" id="an-play-stats"></div>
+          <p class="note-box" style="margin:0">Scores above the training-cohort threshold (the dashed line) fall in the top 5 % most unusual purchases and go to manual review.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODULE C ================= -->
+  <section class="block" id="segments">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="section-num">C</div>
+        <span class="tag">Module C &middot; Segmentation &amp; value</span>
+        <div><h2>Who the customers are, and what they are worth</h2>
+        <p>Recency, frequency and monetary value are log-transformed and clustered with K-Means. A separate time split uses the first 18 months to predict spend in the following 6.</p></div>
+      </div>
+
+      <div class="grid g4 stagger" data-reveal id="sg-kpis"></div>
+      <div class="why why-row reveal"><p><b>What it shows</b>The headline facts about the customer groups and the future-spend model.</p><p><b>Why it helps</b>They show where the money comes from and how well future spending can be predicted.</p></div>
+
+      <div class="grid g3" style="margin-top:20px">
+        <div class="card reveal span2">
+          <h3>Customer map</h3>
+          <div class="sub">A sample of 1,600 customers by recency and total spend (log scale), coloured by segment.</div>
+          <div class="why"><p><b>What it shows</b>Every dot is a customer, placed by how recently they bought and how much they spent.</p><p><b>Why it helps</b>The colours show the four groups are real and clearly different.</p></div>
+          <div class="chart-box tall"><canvas data-chart="sgScatter"></canvas></div>
+        </div>
+        <div class="card reveal">
+          <h3>Customers vs revenue</h3>
+          <div class="sub">Share of customers (inner) and share of historical revenue (outer).</div>
+          <div class="why"><p><b>What it shows</b>Each group's share of customers compared with its share of money.</p><p><b>Why it helps</b>It shows a small group of Champions brings in most of the revenue.</p></div>
+          <div class="chart-box tall"><canvas data-chart="sgShare"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid g4 stagger" data-reveal id="sg-cards" style="margin-top:20px"></div>
+      <div class="why why-row reveal"><p><b>What it shows</b>A profile card for each customer group with its typical behaviour.</p><p><b>Why it helps</b>Each card suggests a simple marketing action for that group.</p></div>
+
+      <div class="grid g2" style="margin-top:20px">
+        <div class="card reveal">
+          <h3>Choosing K</h3>
+          <div class="sub">Elbow (inertia) and silhouette score. K = 4 balances fit and business readability.</div>
+          <div class="why"><p><b>What it shows</b>How well the data splits into 2 to 8 groups.</p><p><b>Why it helps</b>It explains why 4 customer groups was the best choice.</p></div>
+          <div class="chart-box"><canvas data-chart="sgK"></canvas></div>
+        </div>
+        <div class="card reveal">
+          <h3>Future 6-month spend models</h3>
+          <div class="sub">Ranking quality (Spearman) and top-20 % revenue capture on the future window.</div>
+          <div class="why"><p><b>What it shows</b>How well each model predicts which customers will spend the most next.</p><p><b>Why it helps</b>Taller bars mean better at finding tomorrow's best customers.</p></div>
+          <div class="chart-box"><canvas data-chart="sgFuture"></canvas></div>
+        </div>
+      </div>
+      <div class="card reveal" style="margin-top:20px">
+        <h3>Future value metrics</h3>
+        <div class="sub">A simple past-spending baseline is as good as ML for top-20 % targeting; ML ranks the whole base better.</div>
+          <div class="why"><p><b>What it shows</b>Exact scores for each future-spend model.</p><p><b>Why it helps</b>It shows honestly that a simple rule is nearly as good as machine learning here.</p></div>
+        <div class="table-wrap"><table id="sg-future-table"></table></div>
+      </div>
+
+      <div class="card play reveal" style="margin-top:20px">
+        <div class="play-form">
+          <span class="tag">Prediction playground</span>
+          <h3>Assign a customer to a segment</h3>
+          <div class="sub">The saved log + scaler + K-Means pipeline runs in your browser. Enter RFM values or look up a real customer.</div>
+          <div class="why"><p><b>What it shows</b>A live segment finder using the real trained K-Means model.</p><p><b>Why it helps</b>Enter any customer's habits or ID and see which group they belong to and why.</p></div>
+          <div class="field">
+            <label for="sg-id" style="display:block;margin-bottom:6px">Look up a customer ID</label>
+            <div style="display:flex;gap:8px">
+              <input class="text-input" id="sg-id" placeholder="e.g. 12347" inputmode="numeric" autocomplete="off">
+              <button class="btn" id="sg-lookup">Find</button>
+              <button class="btn ghost" id="sg-random">Random</button>
+            </div>
+            <div class="hint" id="sg-id-msg"></div>
+          </div>
+          <div id="sg-fields"></div>
+        </div>
+        <div class="play-out">
+          <div>
+            <div class="verdict-sub">Predicted segment</div>
+            <div class="seg-badge" id="sg-result"><span class="seg-dot"></span><span>-</span></div>
+            <div class="verdict-sub" id="sg-result-sub" style="margin-top:6px"></div>
+          </div>
+          <div>
+            <div class="verdict-sub" style="margin-bottom:10px">Closeness to each segment centre</div>
+            <div id="sg-dists"></div>
+          </div>
+          <div class="mini-stats" id="sg-play-stats"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPARISON ================= -->
+  <section class="block" id="compare">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="section-num">04</div>
+        <span class="tag">Final comparison</span>
+        <div><h2>Each selected model against its baselines</h2>
+        <p>The three modules solve different problems, so each is judged against the simplest sensible alternative on its own held-out data.</p></div>
+      </div>
+      <div class="why why-row reveal"><p><b>What it shows</b>Each chosen model next to the simpler alternatives it had to beat.</p><p><b>Why it helps</b>The dark bar is our model, so you can see at a glance that it earned its place.</p></div>
+      <div class="card reveal" id="compare-rows"></div>
+      <div class="card reveal" style="margin-top:20px">
+        <h3>Final model summary</h3>
+        <div class="sub">From notebook 04, which loads saved results and does no retraining.</div>
+          <div class="why"><p><b>What it shows</b>The chosen model, test method, result and limitation for each module.</p><p><b>Why it helps</b>One table that sums up the whole project for a quick review.</p></div>
+        <div class="table-wrap"><table id="summary-table"></table></div>
+      </div>
+      <div style="margin-top:28px"><div class="why why-row reveal"><p><b>What it shows</b>The honest weak points of each module.</p><p><b>Why it helps</b>Knowing the limits tells you when to trust the models and when to be careful.</p></div></div>
+      <div class="grid g4 stagger" data-reveal style="margin-top:16px">
+        <div class="caveat"><h4>Forecasting</h4><p>The combination model was added after a first comparison. Before XGBoost had a full year of history, seasonal naive was better.</p></div>
+        <div class="caveat"><h4>Anomaly detection</h4><p>About 78 % of flags are legitimate. The supervised model did not beat the unsupervised one because the fraud pattern changed after January.</p></div>
+        <div class="caveat"><h4>Customer value</h4><p>For top-20 % targeting, a simple past-spending baseline is as good as ML. Historical value is not lifetime value.</p></div>
+        <div class="caveat"><h4>Fraud dataset</h4><p>Its origin and licence are undocumented, so it is used for education only.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GALLERY ================= -->
+  <section class="block" id="gallery">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="section-num">05</div>
+        <span class="tag">Notebook outputs</span>
+        <div><h2>Every figure from the notebooks</h2>
+        <p>The original matplotlib figures saved by notebooks 00 to 04. Click any figure to enlarge.</p></div>
+      </div>
+      <div class="why why-row reveal"><p><b>What it shows</b>The original charts produced by the five notebooks.</p><p><b>Why it helps</b>Use the filters to jump to a module and click any chart to see it full size.</p></div>
+      <div class="chips" id="gal-chips"></div>
+      <div class="gallery" id="gallery-grid"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><strong style="font-family:var(--serif);color:var(--espresso);font-size:1.05rem">RetailMind</strong> &middot; E-commerce ML CIE, version 2<br>Data: UCI Online Retail II (CC BY 4.0) and the E-commerce Fraud Data teaching set.</div>
+    <div>Rebuild the data with <span class="mono">python website/build_data.py</span></div>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Figure preview">
+  <button id="lb-close">Close</button>
+  <div><img id="lb-img" alt=""><p id="lb-cap"></p></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<script src="models.js"></script>
+<script src="predict.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+segment,customers,total_historical_revenue,mean_historical_value,median_historical_value,share_of_customers,share_of_revenue
+Champions,1107,11740697.61,10605.8696,5032.22,0.1898,0.7176
+At-risk regulars,1477,2957364.53,2002.2779,1529.82,0.2533,0.1808
+Recent low-spend,1220,992200.42,813.279,702.18,0.2092,0.0606
+Lapsed one-time buyers,2028,671285.72,331.0087,280.82,0.3477,0.041

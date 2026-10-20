@@ -1,0 +1,10 @@
+model,test_MAE,test_RMSE,test_R2,test_MAPE_%,backtest_MAE
+Combination (seasonal naive + daily XGBoost),31966.242,41784.911,0.652,14.439,33443.093
+Seasonal naive (last year),33707.28,44281.193,0.609,15.608,28268.064
+XGBoost (daily→weekly),35195.563,43326.614,0.626,15.305,44927.377
+XGBoost (weekly),37109.066,49511.342,0.512,16.151,44544.064
+Random Forest (daily→weekly),40203.672,50356.298,0.495,17.133,44002.836
+Random Forest (weekly),41557.835,50142.589,0.499,17.546,44251.7
+Linear Regression (weekly),44972.94,55536.624,0.386,19.208,36985.277
+Naive (last week),44981.907,56518.721,0.364,19.521,42662.938
+Training mean,71648.023,96037.339,-0.837,26.198,48526.685

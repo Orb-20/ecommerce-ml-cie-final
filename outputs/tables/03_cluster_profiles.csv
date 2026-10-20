@@ -1,0 +1,5 @@
+segment,cluster,customers,recency_median,frequency_median,monetary_median,monetary_mean,avg_order_value_median,tenure_median,share_of_customers
+Champions,2,1107,15.0,13.0,5032.22,10605.87,358.15,681.0,0.19
+At-risk regulars,0,1477,158.0,5.0,1529.82,2002.278,310.792,620.0,0.253
+Recent low-spend,3,1220,23.0,3.0,702.18,813.279,247.019,214.0,0.209
+Lapsed one-time buyers,1,2028,399.5,1.0,280.82,331.009,201.083,445.0,0.348

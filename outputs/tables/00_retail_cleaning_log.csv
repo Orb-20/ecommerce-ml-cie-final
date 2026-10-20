@@ -1,0 +1,7 @@
+step,rows,rows_removed
+raw lines,1067371,0
+after removing exact duplicates,1033036,34335
+after removing service codes and gift vouchers,1027237,5799
+after removing bad-debt adjustments,1027237,0
+after removing Price <= 0,1021272,5965
+after removing non-cancelled Quantity <= 0,1021272,0

@@ -1,0 +1,4 @@
+flag_rate,precision,recall,share_of_flags_that_are_instant_purchases
+0.02,0.8065,0.1528,0.797
+0.05,0.8905,0.4218,0.8851
+0.1,0.6967,0.66,0.6284

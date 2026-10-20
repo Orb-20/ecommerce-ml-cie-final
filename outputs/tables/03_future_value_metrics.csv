@@ -1,0 +1,5 @@
+model,MAE,Spearman,top20_capture
+XGBoost,751.77,0.64,0.7824
+Random Forest,704.7919,0.6247,0.7716
+Linear Regression,943.333,0.6069,0.7572
+Baseline (past monthly rate × 6),732.4582,0.5967,0.7858
