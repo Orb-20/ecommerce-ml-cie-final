@@ -129,6 +129,19 @@
     el.closest(".card").classList.add("meter-group");
   }
 
+  // wraps each column's formatter so the best value gets a ★ (best: "max" | "min" | "abs" = closest to zero)
+  function markBest(cols, rows, eligible = () => true) {
+    return cols.map(c => {
+      if (!c.best) return c;
+      const score = v => c.best === "abs" ? -Math.abs(v) : c.best === "min" ? -v : v;
+      const top = Math.max(...rows.filter(eligible).map(r => r[c.key]).filter(v => v != null).map(score));
+      const base = c.fmt || (v => v);
+      return { ...c, fmt: (v, r) => eligible(r) && v != null && score(v) === top
+        ? `<span class="is-best">${base(v, r)}<span class="star" title="Best in column">★</span></span>` : base(v, r) };
+    });
+  }
+  const rankFmt = v => v == null ? "–" : "#" + v;
+
   function setRangeFill(input) {
     const p = (input.value - input.min) / (input.max - input.min) * 100;
     input.style.setProperty("--p", p + "%");
@@ -283,7 +296,7 @@
     anCompare(cv) {
       return new Chart(cv, {
         type: "bar",
-        data: { labels: A.comparison.map(r => r.method), datasets: [{ data: A.comparison.map(r => r[anMetric]), backgroundColor: A.comparison.map(r => METHOD_COLORS[r.method]) }] },
+        data: { labels: A.full.map(r => r.method), datasets: [{ data: A.full.map(r => r[anMetric]), backgroundColor: A.full.map(r => METHOD_COLORS[r.method] || C.sand) }] },
         options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => " " + anMetricFmt(c.raw) } } },
           scales: { x: { beginAtZero: true, ticks: { callback: v => anMetricFmt(v) } }, y: { grid: { display: false } } } },
       });
@@ -375,11 +388,31 @@
 
   // ---------------------------------------------------------------- MODULE A
   const snImprove = (1 - sel.test_MAE / snMetric.test_MAE) * 100, meanImprove = (1 - sel.test_MAE / meanMetric.test_MAE) * 100;
+  const selFull = F.full.find(m => m.model === selName);
   $("#fc-kpis").innerHTML =
-    kpi(sel.test_MAE / 1000, "Weekly MAE, held-out 21 weeks", "selected: " + short(selName), { dec: 1, prefix: "£", suffix: "k", dark: true }) +
-    kpi(sel["test_MAPE_%"], "Mean absolute % error", "RMSE " + gbpK(sel.test_RMSE), { dec: 1, suffix: " %" }) +
-    kpi(sel.test_R2, "R² on the test weeks", "share of weekly variation explained", { dec: 2 }) +
+    kpi(selFull["test_accuracy_%"], "Forecast accuracy (100 − MAPE)", "selected: " + short(selName), { dec: 1, suffix: " %", dark: true }) +
+    kpi(sel.test_MAE / 1000, "Weekly MAE, held-out 21 weeks", "RMSE " + gbpK(sel.test_RMSE), { dec: 1, prefix: "£", suffix: "k" }) +
+    kpi(selFull["test_within_20%"] * 100, "Test weeks within ±20 %", "R² " + sel.test_R2.toFixed(2) + " on the test weeks", { dec: 0, suffix: " %" }) +
     kpi(snImprove, "Better than seasonal naive", meanImprove.toFixed(0) + " % better than the training mean", { dec: 1, suffix: " %" });
+
+  const pct1 = v => v.toFixed(1) + " %";
+  sortableTable($("#fc-score"), markBest([
+    { key: "model", label: "Model", fmt: v => v },
+    { key: "overall_rank", label: "Rank", num: true, fmt: rankFmt },
+    { key: "test_accuracy_%", label: "Accuracy", num: true, bar: true, best: "max", fmt: pct1 },
+    { key: "test_within_10%", label: "Within ±10 %", num: true, best: "max", fmt: v => pct(v, 0) },
+    { key: "test_within_20%", label: "Within ±20 %", num: true, best: "max", fmt: v => pct(v, 0) },
+    { key: "test_MAE", label: "MAE", num: true, best: "min", fmt: gbp },
+    { key: "test_RMSE", label: "RMSE", num: true, best: "min", fmt: gbp },
+    { key: "test_MedAE", label: "Median error", num: true, best: "min", fmt: gbp },
+    { key: "test_max_error", label: "Max error", num: true, best: "min", fmt: gbp },
+    { key: "test_R2", label: "R²", num: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "test_MAPE_%", label: "MAPE", num: true, best: "min", fmt: pct1 },
+    { key: "test_bias", label: "Bias", num: true, best: "abs", fmt: v => (v >= 0 ? "+" : "−") + gbp(Math.abs(v)) },
+    { key: "train_MAE", label: "Train MAE", num: true, fmt: gbp },
+    { key: "backtest_MAE", label: "Backtest MAE", num: true, best: "min", fmt: gbp },
+    { key: "backtest_RMSE", label: "Backtest RMSE", num: true, best: "min", fmt: gbp },
+  ], F.full), F.full, r => r.model === selName);
 
   $("#fc-chips").innerHTML = Object.keys(F.test.models).map(n => `<button class="chip${fcShown.has(n) ? " on" : ""}" data-m="${n}">${short(n)}</button>`).join("");
   $("#fc-chips").addEventListener("click", e => {
@@ -388,15 +421,6 @@
     const ch = charts.fcMain; if (!ch) return;
     ch.data.datasets.forEach(d => { if (d._full) d.hidden = !fcShown.has(d._full); }); ch.update();
   });
-
-  sortableTable($("#fc-table"), [
-    { key: "model", label: "Model", fmt: v => v },
-    { key: "test_MAE", label: "Test MAE", num: true, bar: true, fmt: gbp },
-    { key: "test_RMSE", label: "RMSE", num: true, fmt: gbp },
-    { key: "test_R2", label: "R²", num: true, fmt: v => v.toFixed(3) },
-    { key: "test_MAPE_%", label: "MAPE", num: true, fmt: v => v.toFixed(1) + " %" },
-    { key: "backtest_MAE", label: "Backtest MAE", num: true, fmt: gbp },
-  ], F.metrics, r => r.model === selName);
 
   // forecast playground
   $("#fc-rule").textContent = F.rule;
@@ -446,25 +470,38 @@
     kpi(iso.ROC_AUC, "ROC-AUC, unseen cohort", "PR-AUC " + iso.PR_AUC.toFixed(3), { dec: 3 });
   $("#an-base").textContent = pct(A.test_fraud_rate);
 
-  const anMetrics = { ROC_AUC: "ROC-AUC", PR_AUC: "PR-AUC", precision: "Precision", recall: "Recall", lift: "Lift" };
+  const isBaseline = r => r.method === "No flags (baseline)";
+  const anBase = A.full.find(isBaseline);
+  sortableTable($("#an-score"), markBest([
+    { key: "method", label: "Method" },
+    { key: "overall_rank", label: "Rank", num: true, fmt: rankFmt },
+    { key: "accuracy", label: "Accuracy", num: true, fmt: v => pct(v) },
+    { key: "balanced_accuracy", label: "Balanced acc.", num: true, bar: true, best: "max", fmt: v => pct(v) },
+    { key: "precision", label: "Precision", num: true, best: "max", fmt: v => pct(v) },
+    { key: "recall", label: "Recall", num: true, best: "max", fmt: v => pct(v) },
+    { key: "specificity", label: "Specificity", num: true, best: "max", fmt: v => pct(v) },
+    { key: "F1", label: "F1", num: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "MCC", label: "MCC", num: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "ROC_AUC", label: "ROC-AUC", num: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "PR_AUC", label: "PR-AUC", num: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "lift", label: "Lift", num: true, best: "max", fmt: v => v.toFixed(2) + "×" },
+    { key: "TP", label: "Caught (TP)", num: true, fmt: v => num(v) },
+    { key: "FP", label: "False alarm (FP)", num: true, fmt: v => num(v) },
+    { key: "FN", label: "Missed (FN)", num: true, fmt: v => num(v) },
+    { key: "TN", label: "Passed (TN)", num: true, fmt: v => num(v) },
+  ], A.full, r => !isBaseline(r)), A.full, r => r.method === "Isolation Forest");
+  $("#an-score-note").textContent = `Accuracy is misleading here. Only ${pct(A.test_fraud_rate)} of test purchases are fraud, so flagging nothing scores ` +
+    `${pct(anBase.accuracy)} accuracy while catching no fraud at all. That is why accuracy is not starred. Compare methods on balanced accuracy, F1, MCC and PR-AUC instead.`;
+
+  const anMetrics = { lift: "Lift", ROC_AUC: "ROC-AUC", PR_AUC: "PR-AUC", F1: "F1", MCC: "MCC", balanced_accuracy: "Balanced accuracy", accuracy: "Accuracy", precision: "Precision", recall: "Recall" };
   let anMetric = "lift";
-  const anMetricFmt = v => anMetric === "lift" ? (+v).toFixed(2) + "×" : ["precision", "recall"].includes(anMetric) ? Math.round(v * 1000) / 10 + "%" : (+v).toFixed(3);
+  const anMetricFmt = v => anMetric === "lift" ? (+v).toFixed(2) + "×" : ["precision", "recall", "accuracy", "balanced_accuracy"].includes(anMetric) ? Math.round(v * 1000) / 10 + "%" : (+v).toFixed(3);
   $("#an-chips").innerHTML = Object.entries(anMetrics).map(([k, l]) => `<button class="chip${k === anMetric ? " on" : ""}" data-k="${k}">${l}</button>`).join("");
   $("#an-chips").addEventListener("click", e => {
     const b = e.target.closest(".chip"); if (!b) return;
     anMetric = b.dataset.k; $$("#an-chips .chip").forEach(c => c.classList.toggle("on", c === b));
-    const ch = charts.anCompare; if (ch) { ch.data.datasets[0].data = A.comparison.map(r => r[anMetric]); ch.update(); }
+    const ch = charts.anCompare; if (ch) { ch.data.datasets[0].data = A.full.map(r => r[anMetric]); ch.update(); }
   });
-  sortableTable($("#an-table"), [
-    { key: "method", label: "Method" },
-    { key: "uses_labels", label: "Uses labels", fmt: v => v ? "Yes (reference)" : "No" },
-    { key: "ROC_AUC", label: "ROC-AUC", num: true, bar: true, fmt: v => v.toFixed(3) },
-    { key: "PR_AUC", label: "PR-AUC", num: true, fmt: v => v.toFixed(3) },
-    { key: "flag_rate", label: "Flag rate", num: true, fmt: v => pct(v) },
-    { key: "precision", label: "Precision", num: true, fmt: v => pct(v) },
-    { key: "recall", label: "Recall", num: true, fmt: v => pct(v) },
-    { key: "lift", label: "Lift", num: true, fmt: v => v.toFixed(2) + "×" },
-  ], A.comparison, r => r.method === "Isolation Forest");
 
   const cf = A.confusion, cfTot = cf.tp + cf.fp + cf.fn + cf.tn;
   const cell = (n, label, bg, fg, delay) => `<div class="cell" style="background:${bg};color:${fg};transition-delay:${delay}s"><b data-count="${n}">0</b><span>${label} &middot; ${pct(n / cfTot)}</span></div>`;
@@ -547,12 +584,25 @@
       <dt>Median spend</dt><dd>${gbp(p.monetary_median)}</dd><dt>Median order value</dt><dd>${gbp(p.avg_order_value_median)}</dd>
       <dt>Median tenure</dt><dd>${num(p.tenure_median)} days</dd></dl></div>`).join("");
 
-  sortableTable($("#sg-future-table"), [
+  sortableTable($("#sg-score-future"), markBest([
     { key: "model", label: "Model" },
-    { key: "MAE", label: "MAE (6-month spend)", num: true, fmt: gbp },
-    { key: "Spearman", label: "Spearman", num: true, bar: true, fmt: v => v.toFixed(3) },
-    { key: "top20_capture", label: "Top-20 % capture", num: true, fmt: v => pct(v) },
-  ], S.future, r => r.model === "XGBoost");
+    { key: "overall_rank", label: "Rank", num: true, fmt: rankFmt },
+    { key: "Spearman", label: "Spearman", num: true, bar: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "top20_capture", label: "Top-20 % capture", num: true, best: "max", fmt: v => pct(v) },
+    { key: "R2_log", label: "R² (log)", num: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "R2", label: "R² (£)", num: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "MAE", label: "MAE", num: true, best: "min", fmt: gbp },
+    { key: "RMSE", label: "RMSE", num: true, best: "min", fmt: gbp },
+    { key: "MedAE", label: "Median error", num: true, best: "min", fmt: gbp },
+  ], S.future), S.future, r => r.model === "XGBoost");
+  sortableTable($("#sg-score-k"), markBest([
+    { key: "K", label: "Clusters", fmt: v => "K = " + v },
+    { key: "silhouette", label: "Silhouette", num: true, bar: true, best: "max", fmt: v => v.toFixed(3) },
+    { key: "davies_bouldin", label: "Davies–Bouldin (lower = better)", num: true, best: "min", fmt: v => v.toFixed(3) },
+    { key: "calinski_harabasz", label: "Calinski–Harabasz", num: true, best: "max", fmt: v => num(v) },
+    { key: "inertia", label: "Inertia", num: true, fmt: v => num(v) },
+    { key: "selected", label: "Selected", fmt: v => v ? "Yes" : "" },
+  ], S.k_eval), S.k_eval, r => r.selected);
 
   // segmentation playground
   const KM = M.kmeans;
@@ -618,10 +668,10 @@
 
   // ---------------------------------------------------------------- GALLERY
   const figs = ["00_retail_revenue_over_time", "00_retail_weekday_pattern", "00_retail_country_customers", "00_retail_missing_values", "00_retail_numeric_histograms", "00_fraud_by_month", "00_fraud_signals",
-    "01_weekly_revenue", "01_seasonality_autocorrelation", "01_train_test_split", "01_model_comparison", "01_actual_vs_predicted_all", "01_selected_model_residuals", "01_feature_importance",
-    "02_feature_distributions", "02_method_comparison", "02_confusion_and_scatter", "02_flag_rate_tradeoff",
+    "01_weekly_revenue", "01_seasonality_autocorrelation", "01_train_test_split", "01_model_comparison", "01_actual_vs_predicted_all", "01_selected_model_residuals", "01_feature_importance", "01_full_metric_comparison",
+    "02_feature_distributions", "02_method_comparison", "02_confusion_and_scatter", "02_flag_rate_tradeoff", "02_all_confusion_matrices", "02_full_metric_comparison",
     "03_rfm_raw_distributions", "03_rfm_transformed_distributions", "03_elbow_silhouette", "03_segments", "03_segment_revenue", "03_future_value_models",
-    "04_forecast_summary", "04_anomaly_summary", "04_segmentation_summary"];
+    "04_forecast_summary", "04_anomaly_summary", "04_segmentation_summary", "04_full_metric_comparison"];
   const groups = { "00": "Data exploration", "01": "Forecasting", "02": "Anomaly", "03": "Segmentation", "04": "Summary" };
   const nice = f => f.slice(3).replace(/_/g, " ").replace(/^\w/, c => c.toUpperCase());
   $("#gal-chips").innerHTML = `<button class="chip on" data-g="all">All</button>` + Object.entries(groups).map(([k, v]) => `<button class="chip" data-g="${k}">${k} &middot; ${v}</button>`).join("");

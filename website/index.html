@@ -110,7 +110,16 @@
         <p>The test set is the last 21 complete weeks, including the autumn peak. Every feature is known by the end of the previous week, and tree models trained on daily rows get seven times more training data.</p></div>
       </div>
 
-      <div class="grid g4 stagger" data-reveal id="fc-kpis"></div>
+      <div class="card reveal scorecard">
+        <span class="tag">Model scorecard</span>
+        <h3>Every forecasting model on every metric</h3>
+        <div class="sub">All nine models and baselines on the 21 held-out test weeks. <span class="star">★</span> marks the best value in each column; rank averages test MAE, RMSE, R², MAPE and backtest MAE. Click a header to sort.</div>
+        <div class="why"><p><b>What it shows</b>Accuracy and error scores for every forecasting model side by side.</p><p><b>Why it helps</b>You can see which model wins on each measure, and why the combination was chosen.</p></div>
+        <div class="table-wrap"><table id="fc-score"></table></div>
+        <p class="note-box">Forecast accuracy = 100 − MAPE. "Within ±20 %" is the share of test weeks forecast within 20 % of actual revenue. Train MAE is measured on training weeks: a value far below the test MAE signals overfitting, so it is not starred.</p>
+      </div>
+
+      <div class="grid g4 stagger" data-reveal id="fc-kpis" style="margin-top:20px"></div>
       <div class="why why-row reveal"><p><b>What it shows</b>The headline accuracy of the chosen forecasting model on 21 weeks it never saw.</p><p><b>Why it helps</b>Four numbers that tell you how much to trust next week's revenue forecast.</p></div>
 
       <div class="card reveal" style="margin-top:20px">
@@ -134,13 +143,6 @@
           <div class="why"><p><b>What it shows</b>The same models tested again on three earlier time periods.</p><p><b>Why it helps</b>It checks the winner was not just lucky on one test period.</p></div>
           <div class="chart-box"><canvas data-chart="fcBacktest"></canvas></div>
         </div>
-      </div>
-
-      <div class="card reveal" style="margin-top:20px">
-        <h3>Full metrics table</h3>
-        <div class="sub">Click a column header to sort. The selected model is highlighted.</div>
-          <div class="why"><p><b>What it shows</b>All accuracy scores for every forecasting model in one place.</p><p><b>Why it helps</b>Sort by any column to compare models on the measure you care about.</p></div>
-        <div class="table-wrap"><table id="fc-table"></table></div>
       </div>
 
       <div class="grid g2" style="margin-top:20px">
@@ -198,7 +200,16 @@
         <p>Detectors are trained on January to June signups and evaluated on July to August signups the model has never seen. The fraud label is used only for evaluation; a supervised XGBoost is kept as a reference.</p></div>
       </div>
 
-      <div class="grid g4 stagger" data-reveal id="an-kpis"></div>
+      <div class="card reveal scorecard">
+        <span class="tag">Model scorecard</span>
+        <h3>Every detection method on every metric</h3>
+        <div class="sub">Unseen July to August cohort, flags at a 5 % review rate (the rule at its own rate). <span class="star">★</span> marks the best method in each column; rank averages ROC-AUC, PR-AUC, F1, MCC and balanced accuracy. Click a header to sort.</div>
+        <div class="why"><p><b>What it shows</b>Accuracy, precision, recall, F1 and ranking scores for all four methods, plus a "flag nothing" baseline.</p><p><b>Why it helps</b>It shows which method catches fraud best, and why plain accuracy is the wrong score to judge them by.</p></div>
+        <div class="table-wrap"><table id="an-score"></table></div>
+        <p class="note-box" id="an-score-note"></p>
+      </div>
+
+      <div class="grid g4 stagger" data-reveal id="an-kpis" style="margin-top:20px"></div>
       <div class="why why-row reveal"><p><b>What it shows</b>The headline results of the fraud detector on customers it never saw.</p><p><b>Why it helps</b>They show the detector finds fraud almost 5 times better than random checking.</p></div>
 
       <div class="grid g2" style="margin-top:20px">
@@ -222,7 +233,6 @@
           <div class="why"><p><b>What it shows</b>The four detection methods side by side on one chosen score.</p><p><b>Why it helps</b>Switch the score to see which method wins on each measure.</p></div>
         <div class="chips" id="an-chips"></div>
         <div class="chart-box short"><canvas data-chart="anCompare"></canvas></div>
-        <div class="table-wrap" style="margin-top:18px"><table id="an-table"></table></div>
       </div>
 
       <div class="grid g3" style="margin-top:20px">
@@ -294,7 +304,19 @@
         <p>Recency, frequency and monetary value are log-transformed and clustered with K-Means. A separate time split uses the first 18 months to predict spend in the following 6.</p></div>
       </div>
 
-      <div class="grid g4 stagger" data-reveal id="sg-kpis"></div>
+      <div class="card reveal scorecard">
+        <span class="tag">Model scorecard</span>
+        <h3>Every model on every metric</h3>
+        <div class="sub"><span class="star">★</span> marks the best value in each column. Click a header to sort.</div>
+        <div class="why"><p><b>What it shows</b>Error, fit and ranking scores for the four future-spend models, and cluster-quality scores for every K tried.</p><p><b>Why it helps</b>It shows which future-spend model is best at what, and why K = 4 was chosen.</p></div>
+        <div class="score-sub">Future 6-month spend models &middot; test customers &middot; rank averages MAE, RMSE, log R², Spearman and top-20 % capture</div>
+        <div class="table-wrap"><table id="sg-score-future"></table></div>
+        <div class="score-sub">K-Means segmentation &middot; cluster quality for K = 2 to 8</div>
+        <div class="table-wrap"><table id="sg-score-k"></table></div>
+        <p class="note-box">R² on £ is dominated by a few very large customers, while log R² and median error reflect typical customers. K = 2 wins every cluster score but only separates active from inactive customers. Among K ≥ 3, K = 4 has the best silhouette and Davies–Bouldin scores.</p>
+      </div>
+
+      <div class="grid g4 stagger" data-reveal id="sg-kpis" style="margin-top:20px"></div>
       <div class="why why-row reveal"><p><b>What it shows</b>The headline facts about the customer groups and the future-spend model.</p><p><b>Why it helps</b>They show where the money comes from and how well future spending can be predicted.</p></div>
 
       <div class="grid g3" style="margin-top:20px">
@@ -328,12 +350,6 @@
           <div class="why"><p><b>What it shows</b>How well each model predicts which customers will spend the most next.</p><p><b>Why it helps</b>Taller bars mean better at finding tomorrow's best customers.</p></div>
           <div class="chart-box"><canvas data-chart="sgFuture"></canvas></div>
         </div>
-      </div>
-      <div class="card reveal" style="margin-top:20px">
-        <h3>Future value metrics</h3>
-        <div class="sub">A simple past-spending baseline is as good as ML for top-20 % targeting; ML ranks the whole base better.</div>
-          <div class="why"><p><b>What it shows</b>Exact scores for each future-spend model.</p><p><b>Why it helps</b>It shows honestly that a simple rule is nearly as good as machine learning here.</p></div>
-        <div class="table-wrap"><table id="sg-future-table"></table></div>
       </div>
 
       <div class="card play reveal" style="margin-top:20px">

@@ -52,6 +52,7 @@ importance = pd.Series(xgb.feature_importances_, index=fc_bundle["daily_feature_
 weekday = retail.groupby(retail["InvoiceDate"].dt.day_name())["revenue"].sum()
 data["forecast"] = {
     "metrics": records(pd.read_csv(TABLES / "01_forecast_metrics.csv")),
+    "full": records(pd.read_csv(TABLES / "01_forecast_full_metrics.csv")),
     "backtest": records(pd.read_csv(TABLES / "01_forecast_backtest.csv")),
     "weekly": {"dates": [d.strftime("%Y-%m-%d") for d in weekly.index], "revenue": [round(float(v), 2) for v in weekly]},
     "test": {"dates": pred["week_ending"].tolist(), "actual": pred["actual_revenue"].round(2).tolist(),
@@ -81,8 +82,14 @@ hist_legit, _ = np.histogram(scores.loc[y == 0, "iforest_score"], bins=bins, den
 hist_fraud, _ = np.histogram(scores.loc[y == 1, "iforest_score"], bins=bins, density=True)
 flag = scores["iforest_flag_5pct"].values
 iso_bundle = joblib.load(MODELS / "02_isolation_forest_pipeline.joblib")
+comparison = pd.read_csv(TABLES / "02_anomaly_method_comparison.csv")
+anomaly_full = pd.read_csv(TABLES / "02_anomaly_full_metrics.csv").merge(
+    comparison[["method", "uses_labels", "lift"]], on="method", how="left")
+anomaly_full["lift"] = anomaly_full["lift"].fillna(0.0)  # "No flags" baseline catches no fraud
+anomaly_full["uses_labels"] = anomaly_full["uses_labels"].eq(True)
 data["anomaly"] = {
-    "comparison": records(pd.read_csv(TABLES / "02_anomaly_method_comparison.csv")),
+    "comparison": records(comparison),
+    "full": records(anomaly_full),
     "flag_rates": records(pd.read_csv(TABLES / "02_anomaly_flag_rates.csv")),
     "burst": records(pd.read_csv(TABLES / "02_anomaly_train_burst_detection.csv")),
     "top": records(pd.read_csv(TABLES / "02_top_unusual_purchases.csv")),
@@ -100,11 +107,15 @@ data["anomaly"] = {
 seg = pd.read_csv(PREDS / "03_customer_segments.csv")
 sample = seg.sample(1600, random_state=42)
 seg_bundle = joblib.load(MODELS / "03_segmentation_pipeline.joblib")
+future = pd.read_csv(TABLES / "03_future_value_metrics.csv")
+future_ranks = pd.concat([future["MAE"].rank(), future["RMSE"].rank(), future["R2_log"].rank(ascending=False),
+                          future["Spearman"].rank(ascending=False), future["top20_capture"].rank(ascending=False)], axis=1)
+future["overall_rank"] = future_ranks.mean(axis=1).rank(method="min").astype(int)  # same rule as notebook 04
 data["segmentation"] = {
     "profiles": records(pd.read_csv(TABLES / "03_cluster_profiles.csv")),
     "value": records(pd.read_csv(TABLES / "03_segment_value.csv")),
     "k_eval": records(pd.read_csv(TABLES / "03_k_evaluation.csv")),
-    "future": records(pd.read_csv(TABLES / "03_future_value_metrics.csv")),
+    "future": records(future),
     "scatter": [{"r": int(r.Recency), "f": int(r.Frequency), "m": round(float(r.Monetary), 2), "s": r.segment}
                 for r in sample.itertuples()],
     "customers": {str(int(r[0])): [int(r[1]), int(r[2]), round(float(r[3]), 2), r[4]]

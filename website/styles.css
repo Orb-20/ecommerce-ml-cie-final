@@ -143,6 +143,11 @@ td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: m
 td.n { font-family: var(--mono); font-size: .85rem; text-align: right; white-space: nowrap; }
 th.n { text-align: right; }
 tr.best td { background: rgba(196, 165, 122, .16); }
+.is-best { font-weight: 800; color: var(--espresso); white-space: nowrap; }
+.star { color: var(--caramel); margin-left: 4px; font-size: .85em; }
+.scorecard td { white-space: nowrap; }
+.scorecard .note-box { margin: 16px 0 0; }
+.score-sub { font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--caramel); margin: 20px 0 6px; }
 tr.best td:first-child { box-shadow: inset 3px 0 0 var(--caramel); font-weight: 700; }
 tbody tr { transition: background .2s; }
 tbody tr:hover td { background: rgba(236, 224, 200, .55); }
